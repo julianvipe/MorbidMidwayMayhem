@@ -32,5 +32,5 @@ public:
 	FName GetKeyTag() const { return KeyTag; };
 
 protected:
-	void Pickup(AMMM_Character* PickupCharacter) override;
+	void Pickup(AMMM_Character* PickupCharacter);
 };
