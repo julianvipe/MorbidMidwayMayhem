@@ -4,6 +4,7 @@
 #include "MMM_Character.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Weapon/MMM_Weapon.h"
 
 // Sets default values
 AMMM_Character::AMMM_Character()
@@ -23,12 +24,29 @@ AMMM_Character::AMMM_Character()
 
 	TPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPS_CameraComponent"));
 	TPSCameraComponent->SetupAttachment(SpringArmComponent);
+
+
+}
+
+FVector AMMM_Character::GetPawnViewLocation() const
+{
+	if (IsValid(FPSCameraComponent) && bUseFPSView) {
+		return FPSCameraComponent->GetComponentLocation();
+	}
+	else if(IsValid(TPSCameraComponent) && !bUseFPSView) {
+		return TPSCameraComponent->GetComponentLocation();
+	}
+	else {
+		return Super::GetPawnViewLocation();
+	}
 }
 
 // Called when the game starts or when spawned
 void AMMM_Character::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CreateInitialWeapon();
 
 }
 
@@ -54,6 +72,9 @@ void AMMM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AMMM_Character::Crouch);
 	PlayerInputComponent->BindAction("UnCrouch", IE_Released, this, &AMMM_Character::UnCrouch);
+
+	PlayerInputComponent->BindAction("WeaponAction", IE_Pressed, this, &AMMM_Character::StartWeaponAction);
+	PlayerInputComponent->BindAction("WeaponAction", IE_Released, this, &AMMM_Character::StopWeaponAction);
 
 }
 
@@ -92,6 +113,34 @@ void AMMM_Character::Crouch()
 void AMMM_Character::UnCrouch()
 {
 	Super::UnCrouch();
+}
+
+void AMMM_Character::CreateInitialWeapon()
+{
+	if (IsValid(InitialWeaponClass)) {
+		CurrentWeapon = GetWorld()->SpawnActor<AMMM_Weapon>(InitialWeaponClass, GetActorLocation(), GetActorRotation());
+
+		if (IsValid(CurrentWeapon))
+		{
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+	}
+}
+
+void AMMM_Character::StartWeaponAction()
+{
+	if (IsValid(CurrentWeapon)) {
+		CurrentWeapon->StartAction();
+	}
+}
+
+void AMMM_Character::StopWeaponAction()
+{
+	if (IsValid(CurrentWeapon)) {
+		CurrentWeapon->StopAction();
+	}
+
 }
 
 void AMMM_Character::AddKeys(FName NewKey)

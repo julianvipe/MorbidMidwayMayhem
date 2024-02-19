@@ -5,6 +5,7 @@
 #include "Components/MeshComponent.h"
 #include "MMM_Character.h"
 
+
 AMMM_DoorKey::AMMM_DoorKey()
 {
 	KeyMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("KeyMeshComponent"));

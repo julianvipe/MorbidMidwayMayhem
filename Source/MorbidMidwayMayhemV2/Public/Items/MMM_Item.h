@@ -26,7 +26,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void Pickup(AMMM_Character* PickupCharacter);
+	virtual void Pickup(AMMM_Character* PickupCharacter);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Item")
 	void BP_Pickup(AMMM_Character* PickupCharacter);

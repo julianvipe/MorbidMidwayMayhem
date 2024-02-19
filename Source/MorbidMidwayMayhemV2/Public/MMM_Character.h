@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class AMMM_Weapon;
 
 UCLASS()
 class MORBIDMIDWAYMAYHEMV2_API AMMM_Character : public ACharacter
@@ -39,9 +40,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key");
 	TArray<FName>DoorKeys;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon");
+	TSubclassOf<AMMM_Weapon> InitialWeaponClass;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon");
+	AMMM_Weapon* CurrentWeapon;
+
 public:
 	// Sets default values for this character's properties
 	AMMM_Character();
+
+	virtual FVector GetPawnViewLocation() const override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -58,6 +67,12 @@ protected:
 	void Crouch();
 
 	void UnCrouch();
+
+	void CreateInitialWeapon();
+
+	void StartWeaponAction();
+
+	void StopWeaponAction();
 
 public:
 	// Called every frame
