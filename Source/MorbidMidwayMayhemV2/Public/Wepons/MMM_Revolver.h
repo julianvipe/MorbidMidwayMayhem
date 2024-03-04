@@ -6,6 +6,8 @@
 #include "Weapon/MMM_Weapon.h"
 #include "MMM_Revolver.generated.h"
 
+class UParticleSystem;
+
 /**
  * 
  */
@@ -22,8 +24,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LineTrace");
 	float TraceLength;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LineTrace|Debug")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LineTrace|Debug");
 	bool bDrawLineTrace;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects");
+	UParticleSystem* MuzzleEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects");
+	UParticleSystem* ImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects");
+	UParticleSystem* TraceEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects");
+	FName MuzzleSocketName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects");
+	FName TraceParamName;
 
 protected:
 

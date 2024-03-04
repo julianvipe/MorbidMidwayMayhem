@@ -7,6 +7,7 @@
 #include "MMM_Weapon.generated.h"
 
 class UDamageType;
+class ACharacter;
 
 UCLASS()
 class MORBIDMIDWAYMAYHEMV2_API AMMM_Weapon : public AActor
@@ -23,6 +24,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;
+
+	ACharacter* CurrentOwnerCharacter;
 
 protected:
 	// Called when the game starts or when spawned
@@ -44,5 +47,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void StopAction();
+
+	UFUNCTION(BlueprintCallable)
+	void setCharacterOwner(ACharacter* NewOwner);
 
 };

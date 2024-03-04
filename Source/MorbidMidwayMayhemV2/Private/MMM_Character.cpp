@@ -5,6 +5,12 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Weapon/MMM_Weapon.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "MorbidMidwayMayhemV2/MorbidMidwayMayhemV2.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AMMM_Character::AMMM_Character()
@@ -12,7 +18,10 @@ AMMM_Character::AMMM_Character()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bUseFPSView = true;
+	bCanUseWeapon = true;
 	FPSCameraSocketName = "SCK_Camera";
+	MeleeSocketName = "SCK_Melee";
+	MeleeDamage = 10;
 
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS_CameraComponent"));
 	FPSCameraComponent->bUsePawnControlRotation = true;
@@ -25,7 +34,11 @@ AMMM_Character::AMMM_Character()
 	TPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPS_CameraComponent"));
 	TPSCameraComponent->SetupAttachment(SpringArmComponent);
 
-
+	MeleeDetectorComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("MeleeDetectorComponent"));
+	MeleeDetectorComponent->SetupAttachment(GetMesh(), MeleeSocketName);
+	MeleeDetectorComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	MeleeDetectorComponent->SetCollisionResponseToChannel(COLLISION_ENEMY, ECR_Overlap);
+	MeleeDetectorComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 FVector AMMM_Character::GetPawnViewLocation() const
@@ -45,9 +58,8 @@ FVector AMMM_Character::GetPawnViewLocation() const
 void AMMM_Character::BeginPlay()
 {
 	Super::BeginPlay();
-
 	CreateInitialWeapon();
-
+	MeleeDetectorComponent->OnComponentBeginOverlap.AddDynamic(this,&AMMM_Character::MakeMeleeDamage);
 }
 
 // Called every frame
@@ -76,6 +88,8 @@ void AMMM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("WeaponAction", IE_Pressed, this, &AMMM_Character::StartWeaponAction);
 	PlayerInputComponent->BindAction("WeaponAction", IE_Released, this, &AMMM_Character::StopWeaponAction);
 
+	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &AMMM_Character::StartMelee);
+	PlayerInputComponent->BindAction("Melee", IE_Released, this, &AMMM_Character::StopMelee);
 }
 
 
@@ -122,7 +136,7 @@ void AMMM_Character::CreateInitialWeapon()
 
 		if (IsValid(CurrentWeapon))
 		{
-			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->setCharacterOwner(this);
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 	}
@@ -130,6 +144,9 @@ void AMMM_Character::CreateInitialWeapon()
 
 void AMMM_Character::StartWeaponAction()
 {
+	if (!bCanUseWeapon) {
+		return;
+	}
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StartAction();
 	}
@@ -137,10 +154,40 @@ void AMMM_Character::StartWeaponAction()
 
 void AMMM_Character::StopWeaponAction()
 {
+	if (!bCanUseWeapon) {
+		return;
+	}
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StopAction();
 	}
 
+}
+
+void AMMM_Character::StartMelee()
+{
+	if (bIsDoingMelee) {
+		return;
+	}
+	if (IsValid(GetMesh())) {
+		MyAnimInstance = GetMesh()->GetAnimInstance();
+		if (IsValid(MyAnimInstance) && IsValid(MeleeMontage))
+		{
+				MyAnimInstance->Montage_Play(MeleeMontage);
+		}
+	}
+	SetActionState(true);
+}
+
+void AMMM_Character::StopMelee()
+{
+	
+}
+
+void AMMM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (IsValid(OtherActor)) {
+		UGameplayStatics::ApplyPointDamage(OtherActor,MeleeDamage,SweepResult.Location,SweepResult,GetInstigatorController(),this,nullptr);
+	}
 }
 
 void AMMM_Character::AddKeys(FName NewKey)
@@ -151,5 +198,16 @@ void AMMM_Character::AddKeys(FName NewKey)
 bool AMMM_Character::hasKey(FName KeyTag)
 {
 	return DoorKeys.Contains(KeyTag);
+}
+
+void AMMM_Character::SetMeleeDetectorCollision(ECollisionEnabled::Type NewCollisionState)
+{
+	MeleeDetectorComponent->SetCollisionEnabled(NewCollisionState);
+}
+
+void AMMM_Character::SetActionState(bool NewState)
+{
+	bIsDoingMelee = NewState;
+	bCanUseWeapon = !NewState;
 }
 

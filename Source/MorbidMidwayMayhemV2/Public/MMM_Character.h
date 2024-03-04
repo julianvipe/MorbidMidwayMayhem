@@ -6,9 +6,12 @@
 #include "GameFramework/Character.h"
 #include "MMM_Character.generated.h"
 
+class USkelletalMeshComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class AMMM_Weapon;
+class AnimMontage;
+class AnimInstance;
 
 UCLASS()
 class MORBIDMIDWAYMAYHEMV2_API AMMM_Character : public ACharacter
@@ -26,6 +29,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent* TPSCameraComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCapsuleComponent* MeleeDetectorComponent;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming");
@@ -34,8 +40,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming");
 	bool bIsLookInverted;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming");
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming");
 	FName FPSCameraSocketName;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Melee");
+	FName MeleeSocketName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Melee")
+	float MeleeDamage;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Melee")
+	bool bIsDoingMelee;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key");
 	TArray<FName>DoorKeys;
@@ -46,6 +61,14 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon");
 	AMMM_Weapon* CurrentWeapon;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bCanUseWeapon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* MeleeMontage;
+
+
+	UAnimInstance* MyAnimInstance;
 public:
 	// Sets default values for this character's properties
 	AMMM_Character();
@@ -74,6 +97,13 @@ protected:
 
 	void StopWeaponAction();
 
+	void StartMelee();
+
+	void StopMelee();
+
+	UFUNCTION()
+	void MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -86,5 +116,9 @@ public:
 	void AddKeys(FName NewKey);
 
 	bool hasKey(FName KeyTag);
+
+	void SetMeleeDetectorCollision(ECollisionEnabled::Type NewCollisionState);
+
+	void SetActionState(bool NewState);
 
 };

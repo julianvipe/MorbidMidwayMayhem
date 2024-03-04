@@ -3,6 +3,7 @@
 
 #include "Weapon/MMM_Weapon.h"
 #include "GameFramework/DamageType.h"
+#include "GameFramework/Character.h"
 
 // Sets default values
 AMMM_Weapon::AMMM_Weapon()
@@ -36,5 +37,13 @@ void AMMM_Weapon::StartAction()
 void AMMM_Weapon::StopAction()
 {
 	BP_StopAction();
+}
+
+void AMMM_Weapon::setCharacterOwner(ACharacter* NewOwner)
+{
+	if (IsValid(NewOwner)) {
+		SetOwner(NewOwner);
+		CurrentOwnerCharacter = NewOwner;
+	}
 }
 
